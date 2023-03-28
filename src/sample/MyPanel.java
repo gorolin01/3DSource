@@ -23,6 +23,7 @@ public class MyPanel extends JPanel {
         int pixelHeight = height / (imageData.length);
         for (int i = 0; i < imageData.length; i++) {
             for (int j = 0; j < imageData[i].length; j++) {
+                //int intensity = 255 - ((imageData[i][j] * 255) / depth);  //инверсия
                 int intensity = (imageData[i][j] * 255) / depth;
                 //int intensity = imageData[i][j];
                 Color pixelColor = new Color(intensity, intensity, intensity);

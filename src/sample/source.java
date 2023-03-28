@@ -4,9 +4,9 @@ import javax.swing.*;
 
 public class source {
 
-    private static int width = 100;
-    private static int height = 100;
-    private static int depth = 100;
+    private static int width = 150;
+    private static int height = 150;
+    private static int depth = 150;
     private static int[][][] worldSpace = new int[height][width][depth];   //мир представлен трехмерным массивом (0 - пустота, 1 - твердый обьект)
     private static RayTracer rayTracer = new RayTracer(width, height, depth, worldSpace);
 
@@ -27,14 +27,16 @@ public class source {
         int angle = 0;
         for (int n = 0; n < 60*10; n++) {
             resetWorldSpace();  //перезагрузка мира
-            drawCube(40, 40, 40, angle, angle, angle);
+            drawCube(50, 50, 50, 0, 0, angle);
+            drawParallelepiped(50, 50, 50, 20, 15, 30, 30, 50, angle);
+            drawSphere(100, 50, 100, 49, 0, 0, angle);
             //printMass(rayTracer.trace());
             panel.setImageData(rayTracer.trace(worldSpace));
             angle += 1;
             if(angle > 360){
                 angle = 0;
             }
-            Thread.sleep(1000 / 60);
+            //Thread.sleep(1000 / 60);
         }
 
     }
@@ -64,7 +66,7 @@ public class source {
         int centerY = worldSpace[0].length / 2;
         int centerZ = worldSpace[0][0].length / 2;
 
-        //конвертируем углы в радианы
+        // конвертируем углы в радианы
         double angleX = Math.toRadians(angleXG);
         double angleY = Math.toRadians(angleYG);
         double angleZ = Math.toRadians(angleZG);
@@ -92,6 +94,78 @@ public class source {
 
                         // Присваиваем значение 1 в соответствующей точке в пространстве
                         worldSpace[(int) rotated[0] + centerX][(int) rotated[1] + centerY][(int) rotated[2] + centerZ] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    public static void drawParallelepiped(int X0, int Y0, int Z0, int height, int width, int depth, double angleXG, double angleYG, double angleZG) {
+
+        // конвертируем углы в радианы
+        double angleX = Math.toRadians(angleXG);
+        double angleY = Math.toRadians(angleYG);
+        double angleZ = Math.toRadians(angleZG);
+
+        // Создаем матрицы поворота для каждой оси
+        double[][] rotationX = {{1, 0, 0}, {0, Math.cos(angleX), -Math.sin(angleX)}, {0, Math.sin(angleX), Math.cos(angleX)}};
+        double[][] rotationY = {{Math.cos(angleY), 0, Math.sin(angleY)}, {0, 1, 0}, {-Math.sin(angleY), 0, Math.cos(angleY)}};
+        double[][] rotationZ = {{Math.cos(angleZ), -Math.sin(angleZ), 0}, {Math.sin(angleZ), Math.cos(angleZ), 0}, {0, 0, 1}};
+
+        // Создаем матрицу поворота для всего куба, перемножив матрицы поворота по каждой оси
+        double[][] rotation = multiplyMatrices(multiplyMatrices(rotationX, rotationY), rotationZ);
+
+        // Проходимся по всем пикселям пространства, и для каждого пикселя вычисляем расстояние от центра куба в трех измерениях
+        for (int i = 0; i < worldSpace.length; i++) {
+            for (int j = 0; j < worldSpace[0].length; j++) {
+                for (int k = 0; k < worldSpace[0][0].length; k++) {
+                    int distanceX = Math.abs(i - X0);
+                    int distanceY = Math.abs(j - Y0);
+                    int distanceZ = Math.abs(k - Z0);
+
+                    // Если пиксель находится внутри куба, то присваиваем ему значение 1
+                    if (distanceX <= width / 2 && distanceY <= height / 2 && distanceZ <= depth / 2) {
+                        // Применяем матрицу поворота к координатам пикселя
+                        double[] rotated = multiplyMatrixVector(rotation, new double[]{i - X0, j - Y0, k - Z0});
+
+                        // Присваиваем значение 1 в соответствующей точке в пространстве
+                        worldSpace[(int) rotated[0] + X0][(int) rotated[1] + Y0][(int) rotated[2] + Z0] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    public static void drawSphere(int X0, int Y0, int Z0, int radius, double angleXG, double angleYG, double angleZG) {
+
+        // конвертируем углы в радианы
+        double angleX = Math.toRadians(angleXG);
+        double angleY = Math.toRadians(angleYG);
+        double angleZ = Math.toRadians(angleZG);
+
+        // Создаем матрицы поворота для каждой оси
+        double[][] rotationX = {{1, 0, 0}, {0, Math.cos(angleX), -Math.sin(angleX)}, {0, Math.sin(angleX), Math.cos(angleX)}};
+        double[][] rotationY = {{Math.cos(angleY), 0, Math.sin(angleY)}, {0, 1, 0}, {-Math.sin(angleY), 0, Math.cos(angleY)}};
+        double[][] rotationZ = {{Math.cos(angleZ), -Math.sin(angleZ), 0}, {Math.sin(angleZ), Math.cos(angleZ), 0}, {0, 0, 1}};
+
+        // Создаем матрицу поворота для всего куба, перемножив матрицы поворота по каждой оси
+        double[][] rotation = multiplyMatrices(multiplyMatrices(rotationX, rotationY), rotationZ);
+
+        // Проходимся по всем пикселям пространства, и для каждого пикселя вычисляем расстояние от центра куба в трех измерениях
+        for (int i = 0; i < worldSpace.length; i++) {
+            for (int j = 0; j < worldSpace[0].length; j++) {
+                for (int k = 0; k < worldSpace[0][0].length; k++) {
+                    int distanceX = Math.abs(i - X0);
+                    int distanceY = Math.abs(j - Y0);
+                    int distanceZ = Math.abs(k - Z0);
+
+                    // Если пиксель находится внутри куба, то присваиваем ему значение 1
+                    if (distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ <= radius * radius) {
+                        // Применяем матрицу поворота к координатам пикселя
+                        double[] rotated = multiplyMatrixVector(rotation, new double[]{i - X0, j - Y0, k - Z0});
+
+                        // Присваиваем значение 1 в соответствующей точке в пространстве
+                        worldSpace[(int) rotated[0] + X0][(int) rotated[1] + Y0][(int) rotated[2] + Z0] = 1;
                     }
                 }
             }
